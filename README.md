@@ -44,6 +44,55 @@ cd mcp-server-tree-sitter
 pip install -e ".[dev,languages]"
 ```
 
+### Docker Installation
+
+Run the MCP server in an isolated Docker container for consistent, portable deployments.
+
+**Prerequisites**: Docker Engine 20.10+
+
+**Quick Start**:
+```bash
+# Pull the image (when available)
+docker pull mcp-server-tree-sitter:latest
+
+# Or build locally
+docker build -t mcp-server-tree-sitter:latest .
+
+# Run with your project
+docker run -i --rm \
+  -v $(pwd):/workspace:ro \
+  -v mcp-cache:/cache \
+  mcp-server-tree-sitter:latest
+```
+
+**Using Helper Scripts**:
+```bash
+# Build
+./scripts/docker/build.sh production
+
+# Run
+./scripts/docker/run.sh /path/to/project
+
+# Test
+./scripts/docker/test.sh --type quick
+
+# Install in Claude Desktop
+./scripts/docker/install-claude-desktop.sh
+```
+
+**Using docker-compose**:
+```bash
+# Start with docker-compose
+cp .env.example .env
+# Edit PROJECT_PATH in .env
+docker-compose up
+```
+
+For complete Docker documentation, see:
+- [Docker Documentation](docs/docker/README.md)
+- [Claude Desktop Integration](docs/docker/CLAUDE_INTEGRATION.md)
+- [Deployment Guide](docs/docker/DEPLOYMENT.md)
+
 ## Quick Start
 
 ### Running with Claude Desktop
