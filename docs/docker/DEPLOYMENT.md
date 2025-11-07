@@ -73,6 +73,58 @@ docker build \
   -t mcp-server-tree-sitter:py311 .
 ```
 
+### Windows/PowerShell Build Commands
+
+For Windows users, use these PowerShell commands instead of the bash scripts:
+
+```powershell
+# Build production image
+docker build -t mcp-server-tree-sitter:latest .
+
+# Build development image
+docker build -f Dockerfile.dev -t mcp-server-tree-sitter:dev .
+
+# Build without cache
+docker build -t mcp-server-tree-sitter:latest --no-cache .
+
+# Multi-platform build (requires Docker buildx)
+docker buildx create --name multiplatform --use
+docker buildx build -t mcp-server-tree-sitter:latest --platform linux/amd64,linux/arm64 --load .
+
+# Single platform build (faster)
+docker buildx build -t mcp-server-tree-sitter:latest --platform linux/amd64 --load .
+```
+
+**Note**: The bash helper scripts (`.sh` files) require WSL or Git Bash on Windows. For native PowerShell, use the direct docker commands above.
+
+### Running on Windows/PowerShell
+
+```powershell
+# Basic run with current directory
+docker run -i --rm `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  mcp-server-tree-sitter:latest
+
+# Run with specific project path
+docker run -i --rm `
+  -v C:\path\to\your\project:/workspace:ro `
+  -v mcp-cache:/cache `
+  mcp-server-tree-sitter:latest
+
+# Run with environment variables
+docker run -i --rm `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  -e MCP_TS_LOG_LEVEL=DEBUG `
+  mcp-server-tree-sitter:latest
+```
+
+**PowerShell Tips**:
+- Use backtick (`` ` ``) for line continuation in PowerShell
+- Use `${PWD}` instead of `$(pwd)` for current directory
+- Use absolute paths for Windows drives (e.g., `C:\Users\...`)
+
 ## Deployment Scenarios
 
 ### Scenario 1: Claude Desktop Integration
@@ -640,6 +692,64 @@ docker run --rm mcp-server-tree-sitter:latest \
   python -c "from tree_sitter_language_pack import get_languages; print(get_languages())"
 
 # Use a supported language or build custom image with additional parsers
+```
+
+#### Issue 6: Windows/PowerShell Build Errors
+
+**Symptom**:
+```
+ERROR: docker: 'docker buildx build' requires 1 argument
+```
+or
+```
+scripts/docker/build.sh: not found
+```
+
+**Cause**: Bash scripts don't work natively in PowerShell/CMD
+
+**Solution**:
+
+Use direct docker commands instead of bash helper scripts:
+
+```powershell
+# Build development version
+docker build -f Dockerfile.dev -t mcp-server-tree-sitter:dev .
+
+# Build production version
+docker build -t mcp-server-tree-sitter:latest .
+
+# Build without cache
+docker build -f Dockerfile.dev -t mcp-server-tree-sitter:dev --no-cache .
+```
+
+**Alternative**: Use WSL or Git Bash to run the helper scripts:
+
+```powershell
+# Using WSL
+wsl ./scripts/docker/build.sh dev
+
+# Or open Git Bash terminal and run normally
+./scripts/docker/build.sh dev
+```
+
+**For multi-platform builds** with Docker buildx on Windows:
+
+```powershell
+# Create builder first
+docker buildx create --name multiplatform --use
+
+# Build and load image
+docker buildx build -f Dockerfile.dev -t mcp-server-tree-sitter:dev --platform linux/amd64 --load .
+
+# For both platforms (slower)
+docker buildx build -f Dockerfile.dev -t mcp-server-tree-sitter:dev --platform linux/amd64,linux/arm64 --load .
+```
+
+**Important**: Always include `--load` flag with buildx to load the image into your local Docker images.
+
+**Verify your build**:
+```powershell
+docker images mcp-server-tree-sitter
 ```
 
 ### Debug Mode

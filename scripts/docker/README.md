@@ -293,17 +293,68 @@ docker stop mcp-tree-sitter
 
 - ✅ macOS (Intel and Apple Silicon)
 - ✅ Linux (x86_64 and arm64)
-- ⚠️ Windows (Use PowerShell scripts - coming soon)
+- ✅ Windows (Use direct docker commands or WSL/Git Bash)
 
 ### Requirements
 
-**All Platforms:**
+**macOS/Linux:**
 - Docker Engine 20.10+
 - Bash 4.0+
+
+**Windows:**
+- Docker Desktop 20.10+
+- PowerShell 5.1+ (for direct docker commands)
+- OR WSL/Git Bash (to run bash helper scripts)
 
 **Optional (for better experience):**
 - `jq` - JSON processing (for install-claude-desktop.sh)
 - `docker buildx` - Multi-platform builds
+
+### Windows Users
+
+The bash helper scripts (`.sh` files) require a bash environment. Windows users have three options:
+
+**Option 1: Direct Docker Commands (Recommended)**
+
+Use PowerShell with direct docker commands:
+
+```powershell
+# Build development image
+docker build -f Dockerfile.dev -t mcp-server-tree-sitter:dev .
+
+# Build production image
+docker build -t mcp-server-tree-sitter:latest .
+
+# Run container
+docker run -i --rm `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  mcp-server-tree-sitter:dev
+```
+
+**Option 2: Windows Subsystem for Linux (WSL)**
+
+Install WSL and run scripts normally:
+
+```powershell
+wsl ./scripts/docker/build.sh dev
+wsl ./scripts/docker/run.sh /path/to/project
+```
+
+**Option 3: Git Bash**
+
+If you have Git for Windows installed, use Git Bash:
+
+```bash
+./scripts/docker/build.sh dev
+./scripts/docker/run.sh /path/to/project
+```
+
+**Common Windows Issues:**
+
+1. **`build.sh: not found`** - Use direct docker commands or WSL/Git Bash
+2. **`docker buildx build' requires 1 argument`** - Variable expansion issue in PowerShell, use direct commands
+3. **Path issues** - Use absolute Windows paths (e.g., `C:\Users\...`) or `${PWD}` for current directory
 
 ## Tips and Tricks
 

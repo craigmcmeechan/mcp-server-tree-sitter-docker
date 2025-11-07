@@ -549,6 +549,34 @@ docker run -i --rm \
   mcp-server-tree-sitter:latest --debug
 ```
 
+**Windows/PowerShell Commands**:
+```powershell
+# Build development image
+docker build -f Dockerfile.dev -t mcp-server-tree-sitter:dev .
+
+# Build production image
+docker build -t mcp-server-tree-sitter:latest .
+
+# Run container
+docker run -i --rm `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  mcp-server-tree-sitter:latest
+
+# Run with debug
+docker run -i --rm `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  -e MCP_TS_LOG_LEVEL=DEBUG `
+  mcp-server-tree-sitter:latest
+
+# Multi-platform build
+docker buildx create --name multiplatform --use
+docker buildx build -t mcp-server-tree-sitter:latest --platform linux/amd64 --load .
+```
+
+**Note**: On Windows, bash helper scripts require WSL or Git Bash. For native PowerShell, use the direct docker commands shown above.
+
 ### Claude Desktop Configuration
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
