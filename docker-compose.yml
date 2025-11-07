@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: mcp-server-tree-sitter:latest
+    container_name: mcp-tree-sitter
+
+    # Interactive mode required for MCP protocol
+    stdin_open: true
+    tty: false
+
+    # Volume mounts
+    volumes:
+      # Mount your project (read-only)
+      - ${PROJECT_PATH:-.}:/workspace:ro
+
+      # Optional: Mount custom configuration
+      # - ${CONFIG_PATH:-./config}:/config:ro
+
+      # Named volume for cache (persistent, performant)
+      - mcp-cache:/cache
+
+    # Environment variables
+    environment:
+      - MCP_TS_LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MCP_TS_CACHE_ENABLED=${CACHE_ENABLED:-true}
+      - MCP_TS_CACHE_MAX_SIZE_MB=${CACHE_MAX_SIZE_MB:-100}
+      - MCP_TS_CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS:-300}
+      - MCP_TS_SECURITY_MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-5}
+      # - MCP_TS_CONFIG_PATH=/config/config.yaml
+
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network (optional - MCP uses stdio, not network)
+    # Uncomment for maximum security
+    # network_mode: none
+
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+    # Read-only root filesystem (optional - requires tmpfs mounts)
+    # read_only: true
+    # tmpfs:
+    #   - /tmp
+    #   - /cache:mode=1777
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import mcp_server_tree_sitter; print('OK')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  mcp-cache:
+    driver: local
+    # Optional: Use a specific mount point on host
+    # driver_opts:
+    #   type: none
+    #   device: /path/on/host/cache
+    #   o: bind
+
+# Optional: Define networks if needed
+# networks:
+#   mcp-network:
+#     driver: bridge

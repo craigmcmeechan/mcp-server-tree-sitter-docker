@@ -1,0 +1,82 @@
+version: '3.8'
+
+# Multi-Project Example
+# Run separate MCP servers for different projects
+
+services:
+  # Project 1: Python backend
+  mcp-server-backend:
+    image: mcp-server-tree-sitter:latest
+    container_name: mcp-tree-sitter-backend
+    stdin_open: true
+    tty: false
+
+    volumes:
+      - /path/to/backend/project:/workspace:ro
+      - mcp-cache-backend:/cache
+
+    environment:
+      - MCP_TS_LOG_LEVEL=INFO
+      - MCP_TS_CACHE_ENABLED=true
+      - MCP_TS_LANGUAGE_PREFERRED_LANGUAGES=python,go
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+  # Project 2: JavaScript frontend
+  mcp-server-frontend:
+    image: mcp-server-tree-sitter:latest
+    container_name: mcp-tree-sitter-frontend
+    stdin_open: true
+    tty: false
+
+    volumes:
+      - /path/to/frontend/project:/workspace:ro
+      - mcp-cache-frontend:/cache
+
+    environment:
+      - MCP_TS_LOG_LEVEL=INFO
+      - MCP_TS_CACHE_ENABLED=true
+      - MCP_TS_LANGUAGE_PREFERRED_LANGUAGES=javascript,typescript
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+  # Project 3: Rust library
+  mcp-server-library:
+    image: mcp-server-tree-sitter:latest
+    container_name: mcp-tree-sitter-library
+    stdin_open: true
+    tty: false
+
+    volumes:
+      - /path/to/rust/library:/workspace:ro
+      - mcp-cache-library:/cache
+
+    environment:
+      - MCP_TS_LOG_LEVEL=INFO
+      - MCP_TS_CACHE_ENABLED=true
+      - MCP_TS_LANGUAGE_PREFERRED_LANGUAGES=rust
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+volumes:
+  mcp-cache-backend:
+  mcp-cache-frontend:
+  mcp-cache-library:

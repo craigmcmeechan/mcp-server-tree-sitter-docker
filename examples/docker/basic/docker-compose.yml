@@ -1,0 +1,27 @@
+version: '3.8'
+
+# Basic Example: Single Project Analysis
+# This is a minimal docker-compose setup for analyzing a single project
+
+services:
+  mcp-server:
+    image: mcp-server-tree-sitter:latest
+    container_name: mcp-tree-sitter-basic
+    stdin_open: true
+    tty: false
+
+    volumes:
+      # Mount your project here
+      - /path/to/your/project:/workspace:ro
+
+      # Persistent cache for better performance
+      - mcp-cache:/cache
+
+    environment:
+      - MCP_TS_LOG_LEVEL=INFO
+      - MCP_TS_CACHE_ENABLED=true
+
+    restart: unless-stopped
+
+volumes:
+  mcp-cache:

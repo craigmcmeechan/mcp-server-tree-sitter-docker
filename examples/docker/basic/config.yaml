@@ -1,0 +1,25 @@
+# Basic Configuration Example
+# Save this as config.yaml and mount it to the container
+
+cache:
+  enabled: true
+  max_size_mb: 100
+  ttl_seconds: 300
+
+security:
+  max_file_size_mb: 5
+  excluded_dirs:
+    - .git
+    - node_modules
+    - __pycache__
+    - .venv
+    - dist
+    - build
+
+language:
+  default_max_depth: 5
+  preferred_languages:
+    - python
+    - javascript
+
+log_level: INFO

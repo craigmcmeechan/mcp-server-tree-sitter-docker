@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mcp-server-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: mcp-server-tree-sitter:dev
+    container_name: mcp-tree-sitter-dev
+
+    # Interactive mode with TTY for development
+    stdin_open: true
+    tty: true
+
+    # Volume mounts - includes source code for hot-reload
+    volumes:
+      # Application source code (for development/editing)
+      - ./src:/app/src:rw
+
+      # Test files
+      - ./tests:/app/tests:rw
+
+      # Mount your project (read-only)
+      - ${PROJECT_PATH:-.}:/workspace:ro
+
+      # Optional: Mount custom configuration
+      - ${CONFIG_PATH:-./config}:/config:ro
+
+      # Named volume for cache
+      - mcp-cache-dev:/cache
+
+      # Optional: Mount for pytest results
+      # - ./test-results:/app/test-results
+
+    # Environment variables (debug mode by default)
+    environment:
+      - MCP_TS_LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - MCP_TS_CACHE_ENABLED=${CACHE_ENABLED:-true}
+      - MCP_TS_CACHE_MAX_SIZE_MB=${CACHE_MAX_SIZE_MB:-200}
+      - MCP_TS_CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS:-600}
+      - MCP_TS_SECURITY_MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-10}
+      - PYTHONUNBUFFERED=1
+      # - MCP_TS_CONFIG_PATH=/config/config.yaml
+
+    # Resource limits (more generous for development)
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Command override for development
+    # Uncomment one of these or provide your own
+    # command: ["--debug"]                          # Run server in debug mode
+    # command: ["pytest", "-v"]                     # Run tests
+    # command: ["pytest", "--cov"]                  # Run tests with coverage
+    # command: ["/bin/bash"]                        # Interactive shell
+
+    # Working directory
+    working_dir: /app
+
+    # Health check (less strict for dev)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import mcp_server_tree_sitter; print('OK')"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+
+volumes:
+  mcp-cache-dev:
+    driver: local
+
+# Optional: Define networks if needed for development
+# networks:
+#   mcp-dev-network:
+#     driver: bridge
