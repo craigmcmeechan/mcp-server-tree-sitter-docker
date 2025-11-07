@@ -1,0 +1,164 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'Dockerfile.dev'
+      - 'docker/**'
+      - 'pyproject.toml'
+      - '.github/workflows/docker-build.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'Dockerfile.dev'
+      - 'docker/**'
+      - 'pyproject.toml'
+      - '.github/workflows/docker-build.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: mcp-server-tree-sitter
+
+jobs:
+  build-test:
+    name: Build and Test Docker Images
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: [production, dev]
+        include:
+          - target: production
+            dockerfile: Dockerfile
+            tag-suffix: ''
+          - target: dev
+            dockerfile: Dockerfile.dev
+            tag-suffix: -dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+          flavor: |
+            suffix=${{ matrix.tag-suffix }},onlatest=true
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test - Check version
+        if: matrix.target == 'production'
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} --version
+
+      - name: Test - Import check
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} \
+            python -c "import mcp_server_tree_sitter; print('OK')"
+
+      - name: Test - Tree-sitter check
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} \
+            python -c "import tree_sitter; print('OK')"
+
+      - name: Test - Language pack check
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} \
+            python -c "from tree_sitter_language_pack import get_language; get_language('python'); print('OK')"
+
+      - name: Run unit tests
+        if: matrix.target == 'dev'
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} pytest -v
+
+      - name: Security scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check image size
+        run: |
+          docker images ${{ env.IMAGE_NAME }}:${{ github.ref_name }}${{ matrix.tag-suffix }} \
+            --format "Image size: {{.Size}}"
+
+  build-multiplatform:
+    name: Build Multi-Platform Images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=main-
+
+      - name: Build multi-platform image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Display build info
+        run: |
+          echo "Multi-platform build completed"
+          echo "Platforms: linux/amd64, linux/arm64"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
