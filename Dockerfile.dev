@@ -1,0 +1,77 @@
+# Development Dockerfile for MCP Tree-sitter Server
+# This image includes development tools and dependencies
+
+FROM python:3.10-slim
+
+LABEL maintainer="Wrale LTD <contact@wrale.com>"
+LABEL description="MCP Tree-sitter Server - Development Environment"
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    MCP_TS_LOG_LEVEL=DEBUG
+
+# Install build and runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
+    pkg-config \
+    python3-dev \
+    git \
+    curl \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for development
+RUN groupadd -r mcp --gid=1000 && \
+    useradd -r -g mcp --uid=1000 --home-dir=/home/mcp --shell=/bin/bash mcp && \
+    mkdir -p /home/mcp && \
+    chown -R mcp:mcp /home/mcp
+
+# Create application directories
+RUN mkdir -p /app /workspace /cache /config && \
+    chown -R mcp:mcp /app /cache /home/mcp
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files
+COPY --chown=mcp:mcp pyproject.toml ./
+
+# Upgrade pip and install build tools
+RUN pip install --upgrade pip setuptools wheel
+
+# Install all dependencies including dev dependencies
+RUN pip install -e ".[dev]"
+
+# Copy application code
+COPY --chown=mcp:mcp src/ ./src/
+COPY --chown=mcp:mcp tests/ ./tests/
+COPY --chown=mcp:mcp pyproject.toml ./
+COPY --chown=mcp:mcp README.md ./
+COPY --chown=mcp:mcp Makefile ./
+
+# Install the package in editable mode
+RUN pip install -e ".[dev]"
+
+# Copy entrypoint script
+COPY --chown=mcp:mcp docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Switch to non-root user
+USER mcp
+
+# Set working directory
+WORKDIR /app
+
+# Volume mount points
+VOLUME ["/app/src", "/app/tests", "/workspace", "/cache", "/config"]
+
+# Use entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command for development (can run tests, server, etc.)
+CMD ["python", "-m", "mcp_server_tree_sitter.server", "--debug"]

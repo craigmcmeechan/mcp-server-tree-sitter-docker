@@ -1,0 +1,120 @@
+# Git files
+.git/
+.gitignore
+.github/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test and coverage files
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+coverage.xml
+*.cover
+.mypy_cache/
+.dmypy.json
+dmyp.json
+.ruff_cache/
+
+# Documentation (keep only essential)
+docs/
+*.md
+!README.md
+
+# Example and test data
+examples/
+tests/
+test_*.py
+*_test.py
+
+# CI/CD files
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# Docker files (don't include when building)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Lock files (keeping pyproject.toml but excluding locks)
+uv.lock
+poetry.lock
+Pipfile.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+.Trash-*
+
+# Diagnostic results
+diagnostic_results/
+
+# Project-specific
+TODO.md
+CONTRIBUTING.md
+ROADMAP.md
+FEATURES.md
+NOTICE
+LICENSE
+scripts/
+Makefile
