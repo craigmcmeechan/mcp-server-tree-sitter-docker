@@ -7,6 +7,7 @@ Welcome to the Docker documentation for the MCP Tree-sitter Server. This directo
 ### For Users
 
 **Getting Started:**
+- 🚀 [Claude Integration Guide](CLAUDE_INTEGRATION.md) - **Start here!** Configure with Claude Desktop & Claude Code CLI
 - 🚀 [Deployment Guide](DEPLOYMENT.md) - How to run the Docker container
 - 📦 [Dependencies](DEPENDENCIES.md) - Required dependencies and system requirements
 
@@ -20,6 +21,22 @@ Welcome to the Docker documentation for the MCP Tree-sitter Server. This directo
 - 🗺️ [Docker Plan](DOCKER_PLAN.md) - Detailed implementation plan and architecture decisions
 
 ## Document Summaries
+
+### [CLAUDE_INTEGRATION.md](CLAUDE_INTEGRATION.md)
+**Purpose**: Complete guide for configuring Docker MCP server with Claude
+**Audience**: Claude Desktop and Claude Code CLI users
+**Contents**:
+- Claude Desktop configuration (macOS/Linux/Windows)
+- Claude Code CLI configuration
+- Configuration options and environment variables
+- Common scenarios (dev workflow, monorepo, CI/CD, security)
+- Troubleshooting Claude-specific issues
+- Testing and verification steps
+- Best practices and migration guide
+
+**When to read**: **Start here if using Claude Desktop or Claude Code CLI** - this is your primary integration guide.
+
+---
 
 ### [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)
 **Purpose**: Comprehensive overview of the MCP Tree-sitter Server project
@@ -144,6 +161,7 @@ Once implemented, the Docker-related files will be organized as follows:
 │
 └── docs/docker/
     ├── README.md                       # This file
+    ├── CLAUDE_INTEGRATION.md           # Claude Desktop & CLI config guide
     ├── PROJECT_OVERVIEW.md
     ├── DOCKER_PLAN.md
     ├── DEPENDENCIES.md
@@ -191,10 +209,11 @@ docker-compose up
 
 ### For First-Time Users
 
-1. Read [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) to understand the project
-2. Follow [DEPLOYMENT.md](DEPLOYMENT.md) Quick Start section
-3. Configure Claude Desktop using examples in DEPLOYMENT.md
-4. Refer to Troubleshooting section if issues arise
+1. Read [CLAUDE_INTEGRATION.md](CLAUDE_INTEGRATION.md) to configure Claude Desktop or Claude Code CLI
+2. Follow the configuration examples for your platform (macOS/Linux/Windows)
+3. Test your setup using the verification steps
+4. Read [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) to understand the project better
+5. Refer to Troubleshooting sections if issues arise
 
 ### For Developers Implementing Docker
 
