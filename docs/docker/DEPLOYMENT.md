@@ -125,6 +125,73 @@ docker run -i --rm `
 - Use `${PWD}` instead of `$(pwd)` for current directory
 - Use absolute paths for Windows drives (e.g., `C:\Users\...`)
 
+### Using the Development Image
+
+The development image is designed for active development with live code changes. **Important**: The dev image does not include source code - you must mount it at runtime.
+
+**Linux/macOS**:
+```bash
+# Interactive shell for development
+docker run -it --rm \
+  -v $(pwd)/src:/app/src:ro \
+  -v $(pwd)/tests:/app/tests:ro \
+  -v $(pwd):/workspace:ro \
+  mcp-server-tree-sitter:dev
+
+# Run tests
+docker run --rm \
+  -v $(pwd)/src:/app/src:ro \
+  -v $(pwd)/tests:/app/tests:ro \
+  mcp-server-tree-sitter:dev \
+  pytest tests/
+
+# Run server with debug logging
+docker run -i --rm \
+  -v $(pwd)/src:/app/src:ro \
+  -v $(pwd):/workspace:ro \
+  -v mcp-cache:/cache \
+  mcp-server-tree-sitter:dev \
+  python -m mcp_server_tree_sitter.server --debug
+
+# Run linting
+docker run --rm \
+  -v $(pwd)/src:/app/src:ro \
+  mcp-server-tree-sitter:dev \
+  ruff check src/
+```
+
+**Windows/PowerShell**:
+```powershell
+# Interactive shell for development
+docker run -it --rm `
+  -v ${PWD}/src:/app/src:ro `
+  -v ${PWD}/tests:/app/tests:ro `
+  -v ${PWD}:/workspace:ro `
+  mcp-server-tree-sitter:dev
+
+# Run tests
+docker run --rm `
+  -v ${PWD}/src:/app/src:ro `
+  -v ${PWD}/tests:/app/tests:ro `
+  mcp-server-tree-sitter:dev `
+  pytest tests/
+
+# Run server with debug logging
+docker run -i --rm `
+  -v ${PWD}/src:/app/src:ro `
+  -v ${PWD}:/workspace:ro `
+  -v mcp-cache:/cache `
+  mcp-server-tree-sitter:dev `
+  python -m mcp_server_tree_sitter.server --debug
+```
+
+**Key Points**:
+- Dev image has all dependencies pre-installed
+- Source code must be mounted as volumes
+- Changes to local files are immediately reflected in the container
+- Use `:ro` (read-only) for source mounts as a safety measure
+- The PYTHONPATH is set to `/app` so mounted modules are importable
+
 ## Deployment Scenarios
 
 ### Scenario 1: Claude Desktop Integration

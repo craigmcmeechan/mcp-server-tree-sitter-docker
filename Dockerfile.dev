@@ -11,7 +11,8 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    MCP_TS_LOG_LEVEL=DEBUG
+    MCP_TS_LOG_LEVEL=DEBUG \
+    PYTHONPATH=/app
 
 # Install build and runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,24 +43,24 @@ WORKDIR /app
 COPY --chown=mcp:mcp pyproject.toml ./
 
 # Upgrade pip and install build tools
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --upgrade pip setuptools wheel hatchling
 
-# Install all dependencies including dev dependencies
-RUN pip install -e ".[dev]"
+# Install all dependencies from pyproject.toml
+# We install dependencies manually to avoid needing the source code at build time
+RUN pip install \
+    'mcp[cli]>=0.12.0' \
+    'tree-sitter>=0.20.0' \
+    'tree-sitter-language-pack>=0.6.1' \
+    'pyyaml>=6.0' \
+    'pydantic>=2.0.0' \
+    'types-pyyaml>=6.0.12.20241230' \
+    'pytest>=7.0.0' \
+    'pytest-cov>=4.0.0' \
+    'ruff>=0.0.262' \
+    'mypy>=1.2.0'
 
-# Copy application code
-COPY --chown=mcp:mcp src/ ./src/
-COPY --chown=mcp:mcp tests/ ./tests/
-COPY --chown=mcp:mcp pyproject.toml ./
-COPY --chown=mcp:mcp README.md ./
-COPY --chown=mcp:mcp Makefile ./
-
-# Install the package in editable mode
-RUN pip install -e ".[dev]"
-
-# Copy entrypoint script
-COPY --chown=mcp:mcp docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Note: Source code (src/, tests/) will be mounted as volumes at runtime
+# This allows live code changes without rebuilding the image
 
 # Switch to non-root user
 USER mcp
@@ -67,11 +68,16 @@ USER mcp
 # Set working directory
 WORKDIR /app
 
-# Volume mount points
+# Volume mount points for development
+# Mount your source code: -v ./src:/app/src:ro
+# Mount your tests: -v ./tests:/app/tests:ro
+# Mount workspace: -v /path/to/project:/workspace:ro
 VOLUME ["/app/src", "/app/tests", "/workspace", "/cache", "/config"]
 
-# Use entrypoint script
-ENTRYPOINT ["/entrypoint.sh"]
-
-# Default command for development (can run tests, server, etc.)
-CMD ["python", "-m", "mcp_server_tree_sitter.server", "--debug"]
+# No entrypoint for dev - allows flexible usage
+# Default command for development (interactive shell)
+# Usage examples:
+#   Interactive: docker run -it --rm -v ./src:/app/src mcp-server-tree-sitter:dev
+#   Run tests: docker run --rm -v ./src:/app/src -v ./tests:/app/tests mcp-server-tree-sitter:dev pytest
+#   Run server: docker run -i --rm -v ./src:/app/src -v ./:/workspace:ro mcp-server-tree-sitter:dev python -m mcp_server_tree_sitter.server
+CMD ["/bin/bash"]
